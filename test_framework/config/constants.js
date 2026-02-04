@@ -50,6 +50,7 @@ export const PATHS = {
  */
 export const TEMPLATE_FILES = [
   'site_visitor_welcome.mjml',
+  'site_visitor_welcome_copy.mjml',
   'site_visitor_welcome_partner_a.mjml',
   'site_visitor_welcome_partner_b.mjml',
 ];
@@ -73,6 +74,14 @@ export const TEMPLATE_META = {
     description: 'Base template - Standard welcome email with blue color scheme',
     type: 'base',
     isBase: true,
+  },
+  site_visitor_welcome_copy: {
+    name: 'Site Visitor Welcome Copy',
+    description: 'Copy of base template - Must be identical to base',
+    type: 'copy',
+    isBase: false,
+    expectedDifference: 'none',
+    baseTemplate: 'site_visitor_welcome',
   },
   site_visitor_welcome_partner_a: {
     name: 'Partner A Welcome',
@@ -135,7 +144,9 @@ export const PIPELINE_STEPS = {
   INIT: 'init',
   PLANNER: 'planner',
   ANALYZER: 'analyzer',
+  GENERATOR: 'generator',
   DIFF: 'diff',
+  PLAYWRIGHT: 'playwright',
   REPORTER: 'reporter',
   COMPLETE: 'complete',
   ERROR: 'error',
@@ -147,7 +158,9 @@ export const PIPELINE_STEPS = {
 export const STEP_MARKERS = {
   [PIPELINE_STEPS.PLANNER]: '[STEP:planner]',
   [PIPELINE_STEPS.ANALYZER]: '[STEP:analyzer]',
+  [PIPELINE_STEPS.GENERATOR]: '[STEP:generator]',
   [PIPELINE_STEPS.DIFF]: '[STEP:diff]',
+  [PIPELINE_STEPS.PLAYWRIGHT]: '[STEP:playwright]',
   [PIPELINE_STEPS.REPORTER]: '[STEP:reporter]',
 };
 
@@ -167,20 +180,34 @@ export const PIPELINE_STEP_META = [
     name: 'Test Planner',
     description: 'Analyzing requirements and creating test plans',
     icon: '📋',
-    progress: 25,
+    progress: 15,
   },
   {
     id: PIPELINE_STEPS.ANALYZER,
     name: 'Change Analyzer',
     description: 'Detecting file changes and modified templates',
     icon: '🔍',
-    progress: 50,
+    progress: 30,
+  },
+  {
+    id: PIPELINE_STEPS.GENERATOR,
+    name: 'Test Generator',
+    description: 'AI generating dynamic test cases from test plan',
+    icon: '🤖',
+    progress: 45,
   },
   {
     id: PIPELINE_STEPS.DIFF,
     name: 'Diff Analyzer',
     description: 'Comparing templates and detecting differences',
     icon: '⚖️',
+    progress: 60,
+  },
+  {
+    id: PIPELINE_STEPS.PLAYWRIGHT,
+    name: 'Playwright Tests',
+    description: 'Running AI-generated regression tests',
+    icon: '🎭',
     progress: 75,
   },
   {
