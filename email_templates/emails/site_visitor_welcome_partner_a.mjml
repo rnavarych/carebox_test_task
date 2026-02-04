@@ -1,0 +1,49 @@
+<%- include('../shared/variables') %>
+<%
+  // Template-specific configuration - GREEN COLOR SCHEME
+  const primaryColor = '#16a34a'    // Green
+  const headingColor = '#166534'    // Dark green
+  const bgColor = '#f0fdf4'         // Light green tint
+  const title = 'Welcome to ' + company.name
+  const previewText = 'Welcome, ' + visitor.name + '! We\'re excited to have you.'
+  const greeting = 'Hello'
+  const buttonText = 'Get Started Now'
+%>
+<!--
+  ============================================
+  SITE VISITOR WELCOME - PARTNER A VARIATION
+  ============================================
+
+  Purpose: Welcome email for Partner A brand
+  Color Scheme: Green (#16a34a primary)
+
+  DIFFERENCE FROM BASE:
+    - Different color scheme (green instead of blue)
+    - Same content structure
+  ============================================
+-->
+
+<mjml>
+  <%- include('../shared/partials/head', { title, previewText, primaryColor }) %>
+
+  <mj-body background-color="<%= bgColor %>">
+
+    <%- include('../shared/partials/header', { primaryColor }) %>
+
+    <!-- ========== MAIN CONTENT SECTION ========== -->
+    <mj-section background-color="#ffffff" padding="40px 30px">
+      <mj-column>
+
+        <%- include('../shared/partials/content-welcome', { greeting, headingColor }) %>
+
+        <%- include('../shared/partials/button-cta', { buttonText }) %>
+
+        <%- include('../shared/partials/support-note') %>
+
+      </mj-column>
+    </mj-section>
+
+    <%- include('../shared/partials/footer', { bgColor }) %>
+
+  </mj-body>
+</mjml>

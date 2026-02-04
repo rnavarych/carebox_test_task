@@ -1,0 +1,515 @@
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { API_ENDPOINTS, TIMEOUTS } from '../constants'
+import { LoadingSpinner, EmptyState, StatusBadge } from '../components/ui'
+import { IssueDetailPanel } from '../components/reports'
+import { useTestCompletion } from '../hooks'
+
+function Reports() {
+  const { t } = useTranslation(['pages', 'common', 'messages'])
+  const [reports, setReports] = useState([])
+  const [selectedReport, setSelectedReport] = useState(null)
+  const [reportContent, setReportContent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [searchParams] = useSearchParams()
+  const [selectedIssue, setSelectedIssue] = useState(null)
+  const [issueScreenshots, setIssueScreenshots] = useState([])
+  const [logs, setLogs] = useState([])
+  const [testPlans, setTestPlans] = useState([])
+  const [testsRunning, setTestsRunning] = useState(false)
+  const iframeRef = useRef(null)
+
+  // Auto-refresh when tests complete
+  const refreshAllData = useCallback(() => {
+    fetchReports()
+    fetchLogs()
+    fetchTestPlans()
+  }, [])
+
+  useTestCompletion(refreshAllData)
+
+  useEffect(() => {
+    fetchReports()
+    fetchLogs()
+    fetchTestPlans()
+    checkTestStatus()
+  }, [])
+
+  // Poll for test status
+  useEffect(() => {
+    const interval = setInterval(checkTestStatus, TIMEOUTS.POLLING_INTERVAL)
+    return () => clearInterval(interval)
+  }, [])
+
+  const checkTestStatus = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.TEST_STATUS)
+      if (res.ok) {
+        const data = await res.json()
+        setTestsRunning(data.isRunning || false)
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  const runAllTests = async () => {
+    if (testsRunning) return
+    try {
+      const res = await fetch(API_ENDPOINTS.RUN_TESTS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templates: [] }) // Empty array = all templates
+      })
+      if (res.ok) {
+        setTestsRunning(true)
+      }
+    } catch (err) {
+      console.error('Failed to start tests:', err)
+    }
+  }
+
+  const fetchLogs = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.LOGS)
+      if (res.ok) {
+        const data = await res.json()
+        setLogs(data.logs || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch logs:', err)
+    }
+  }
+
+  const fetchTestPlans = async () => {
+    try {
+      const res = await fetch(API_ENDPOINTS.TEST_PLANS)
+      if (res.ok) {
+        const data = await res.json()
+        setTestPlans(data.plans || [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch test plans:', err)
+    }
+  }
+
+  useEffect(() => {
+    const reportId = searchParams.get('id')
+    if (reportId && reports.length > 0 && !selectedReport) {
+      const report = reports.find(r => r.id === reportId)
+      if (report) {
+        viewReport(report)
+      }
+    }
+  }, [searchParams, reports])
+
+  // Listen for messages from the iframe (when user clicks on issue links)
+  useEffect(() => {
+    const handleMessage = (event) => {
+      // Handle messages from the iframe
+      if (event.data && event.data.type === 'openIssueDetail') {
+        const issueData = event.data.issue
+        setSelectedIssue(issueData)
+        fetchScreenshotsForIssue(issueData)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  const fetchScreenshotsForIssue = async (issue) => {
+    setIssueScreenshots([])
+
+    // Determine which templates to show screenshots for
+    const templates = []
+    if (issue.baseTemplate) templates.push(issue.baseTemplate)
+    if (issue.compareTemplate) templates.push(issue.compareTemplate)
+
+    // If no specific templates, use all templates
+    if (templates.length === 0) {
+      templates.push('site_visitor_welcome', 'site_visitor_welcome_partner_a', 'site_visitor_welcome_partner_b')
+    }
+
+    const viewports = ['desktop', 'mobile']
+    const screenshots = []
+
+    for (const template of templates) {
+      for (const viewport of viewports) {
+        screenshots.push({
+          template,
+          viewport,
+          loading: true,
+          url: `/screenshots/${template}-${viewport}.png`,
+          error: false
+        })
+      }
+    }
+
+    setIssueScreenshots(screenshots)
+
+    // Verify screenshots exist and update state
+    const updatedScreenshots = await Promise.all(
+      screenshots.map(async (ss) => {
+        try {
+          const res = await fetch(ss.url, { method: 'HEAD' })
+          return {
+            ...ss,
+            loading: false,
+            error: !res.ok
+          }
+        } catch {
+          return {
+            ...ss,
+            loading: false,
+            error: true
+          }
+        }
+      })
+    )
+
+    setIssueScreenshots(updatedScreenshots)
+  }
+
+  const fetchReports = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(API_ENDPOINTS.REPORTS)
+      if (res.ok) {
+        const data = await res.json()
+        setReports(data.reports || [])
+      } else {
+        throw new Error('Failed to fetch reports')
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Inject script into report HTML to handle link clicks
+  const injectIssueClickHandler = useCallback((html) => {
+    const script = `
+      <script>
+        document.addEventListener('click', function(e) {
+          const link = e.target.closest('[data-issue]');
+          if (link) {
+            e.preventDefault();
+            try {
+              const issueData = JSON.parse(link.getAttribute('data-issue'));
+              window.parent.postMessage({
+                type: 'openIssueDetail',
+                issue: issueData
+              }, '*');
+            } catch (err) {
+              console.error('Failed to parse issue data:', err);
+            }
+          }
+        });
+      </script>
+    `
+    // Insert script before closing body tag
+    if (html.includes('</body>')) {
+      return html.replace('</body>', `${script}</body>`)
+    }
+    return html + script
+  }, [])
+
+  const viewReport = async (report) => {
+    setSelectedReport(report)
+    setSelectedIssue(null)
+    try {
+      const res = await fetch(`${API_ENDPOINTS.REPORTS}/${report.id}`)
+      if (res.ok) {
+        let content = await res.text()
+        // Inject the click handler script
+        content = injectIssueClickHandler(content)
+        setReportContent(content)
+      } else {
+        throw new Error('Failed to load report')
+      }
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const getRelatedLog = (report) => {
+    if (!report?.createdAt || logs.length === 0) return null
+    const reportTime = new Date(report.createdAt).getTime()
+    return logs.find(log => {
+      const logTime = new Date(log.createdAt).getTime()
+      return Math.abs(logTime - reportTime) < 5 * 60 * 1000
+    })
+  }
+
+  const getRelatedTestPlan = (report) => {
+    if (!report?.createdAt || testPlans.length === 0) return null
+    const reportTime = new Date(report.createdAt).getTime()
+    return testPlans.find(plan => {
+      const planTime = new Date(plan.createdAt).getTime()
+      return Math.abs(planTime - reportTime) < 5 * 60 * 1000
+    })
+  }
+
+  const deleteReport = async (report, e) => {
+    e.stopPropagation()
+    const relatedLog = getRelatedLog(report)
+    const relatedPlan = getRelatedTestPlan(report)
+
+    let confirmMessage = t('messages:confirm.deleteReport', { title: report.title })
+    if (relatedLog || relatedPlan) {
+      confirmMessage += '\n\n' + t('messages:confirm.deleteLinkedItems')
+      if (relatedLog) confirmMessage += '\n- Log: ' + relatedLog.file
+      if (relatedPlan) confirmMessage += '\n- Test Plan: ' + (relatedPlan.testPlanId || relatedPlan.id)
+    }
+
+    if (!confirm(confirmMessage)) return
+
+    try {
+      const res = await fetch('/api/delete-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: report.id })
+      })
+      if (res.ok) {
+        setReports(reports.filter(r => r.id !== report.id))
+        if (selectedReport?.id === report.id) {
+          setSelectedReport(null)
+          setReportContent(null)
+        }
+        // Refresh logs and test plans since they may have been deleted
+        fetchLogs()
+        fetchTestPlans()
+      }
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const formatSize = (bytes) => {
+    if (bytes < 1024) return `${bytes} ${t('common:units.bytes')}`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} ${t('common:units.kilobytes')}`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} ${t('common:units.megabytes')}`
+  }
+
+  const getRelatedLogFile = (reportId) => {
+    const match = reportId.match(/report-(.+)/)
+    if (match) {
+      return `test-${match[1]}.log`
+    }
+    return null
+  }
+
+  const handleCloseIssuePanel = () => {
+    setSelectedIssue(null)
+    setIssueScreenshots([])
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{t('pages:reports.title')}</h1>
+            <p className="text-sm text-gray-500">{t('pages:reports.subtitle')}</p>
+          </div>
+          <button
+            onClick={fetchReports}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>{t('common:buttons.refresh')}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-hidden flex">
+        {/* Reports List */}
+        <div className={`${selectedReport ? 'w-80' : 'w-full'} border-r bg-white overflow-auto transition-all`}>
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <LoadingSpinner text={t('pages:reports.loadingReports')} />
+            </div>
+          ) : error ? (
+            <div className="p-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 className="text-lg font-semibold text-red-800 mb-2">{t('pages:reports.errorLoading')}</h3>
+                <p className="text-red-600">{error}</p>
+              </div>
+            </div>
+          ) : reports.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                icon={
+                  <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                }
+                title={t('pages:reports.noReports')}
+                description={t('pages:reports.runTestsToGenerate')}
+                actionLabel={testsRunning ? t('common:labels.running') : t('common:buttons.runAllTests')}
+                action={runAllTests}
+                actionDisabled={testsRunning}
+              />
+            </div>
+          ) : (
+            <div className="divide-y">
+              {reports.map((report) => (
+                <div
+                  key={report.id}
+                  onClick={() => viewReport(report)}
+                  className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedReport?.id === report.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <StatusBadge status={report.status} />
+                      </div>
+                      <h3 className="font-medium text-gray-900 truncate" title={report.title}>
+                        {report.title}
+                      </h3>
+                      <div className="flex items-center space-x-3 mt-2 text-xs text-gray-500">
+                        <span className="flex items-center space-x-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>{formatDate(report.createdAt)}</span>
+                        </span>
+                        <span className="flex items-center space-x-1">
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>{formatSize(report.size)}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => deleteReport(report, e)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title={t('common:buttons.delete')}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Report Content Viewer */}
+        {selectedReport && (
+          <div className="flex-1 flex flex-col bg-gray-50">
+            {/* Report Header */}
+            <div className="bg-white border-b px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => {
+                    setSelectedReport(null)
+                    setReportContent(null)
+                    setSelectedIssue(null)
+                  }}
+                  className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div>
+                  <h2 className="font-semibold text-gray-800">{selectedReport.title}</h2>
+                  <p className="text-xs text-gray-500">{selectedReport.file}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {getRelatedLogFile(selectedReport.id) && (
+                  <a
+                    href={`/logs?file=${getRelatedLogFile(selectedReport.id)}`}
+                    className="px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 flex items-center space-x-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{t('common:buttons.viewLogs')}</span>
+                  </a>
+                )}
+                <a
+                  href="/test-plans"
+                  className="px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 flex items-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  <span>{t('pages:reports.testPlans')}</span>
+                </a>
+                <a
+                  href={`/artifacts/${selectedReport.file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  <span>{t('common:buttons.openInNewTab')}</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Report Content */}
+            <div className="flex-1 overflow-auto p-4">
+              {reportContent ? (
+                <iframe
+                  ref={iframeRef}
+                  srcDoc={reportContent}
+                  className="w-full h-full bg-white rounded-lg shadow border-0"
+                  title={selectedReport.title}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <LoadingSpinner text={t('pages:reports.loadingContent')} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Issue Detail Panel */}
+      {selectedIssue && (
+        <IssueDetailPanel
+          issue={selectedIssue}
+          screenshots={issueScreenshots}
+          onClose={handleCloseIssuePanel}
+        />
+      )}
+    </div>
+  )
+}
+
+export default Reports

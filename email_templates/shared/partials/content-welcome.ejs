@@ -1,0 +1,36 @@
+<%#
+  ============================================
+  WELCOME CONTENT PARTIAL
+  ============================================
+
+  Standard welcome message content used by base and Partner A templates.
+  Partner B uses different content.
+
+  Parameters:
+    - greeting: Greeting text (default: "Hello")
+    - headingColor: Color for the greeting heading
+  ============================================
+%>
+<!-- Greeting -->
+<mj-text
+  font-size="24px"
+  font-weight="bold"
+  color="<%= headingColor %>"
+  padding-bottom="20px"
+>
+  <%= typeof greeting !== 'undefined' ? greeting : 'Hello' %> <%= visitor.name %>!
+</mj-text>
+
+<!-- Welcome Message - Paragraph 1 -->
+<mj-text padding-bottom="20px">
+  Welcome to our website! We're thrilled to have you join our community.
+  Your visit means a lot to us, and we're committed to providing you with
+  the best experience possible.
+</mj-text>
+
+<!-- Welcome Message - Paragraph 2 -->
+<mj-text padding-bottom="20px">
+  As a valued visitor, you now have access to exclusive content, special
+  offers, and the latest updates from our team. We encourage you to explore
+  everything we have to offer.
+</mj-text>

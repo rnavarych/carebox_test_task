@@ -1,0 +1,55 @@
+{
+  "brand": {
+    "name": "Carebox",
+    "logo": "carebox_logo.png",
+    "website": "https://carebox.com"
+  },
+  "colors": {
+    "primary": {
+      "base": "#2563eb",
+      "partnerA": "#16a34a",
+      "partnerB": "#2563eb"
+    },
+    "secondary": {
+      "base": "#1f2937",
+      "partnerA": "#166534",
+      "partnerB": "#1f2937"
+    },
+    "background": {
+      "base": "#f4f4f5",
+      "partnerA": "#f0fdf4",
+      "partnerB": "#f4f4f5"
+    },
+    "text": {
+      "primary": "#333333",
+      "secondary": "#6b7280",
+      "muted": "#9ca3af"
+    }
+  },
+  "typography": {
+    "fontFamily": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "fontSize": {
+      "heading": "24px",
+      "subheading": "18px",
+      "body": "14px",
+      "small": "12px",
+      "tiny": "11px"
+    },
+    "lineHeight": "1.6"
+  },
+  "spacing": {
+    "section": "40px 30px",
+    "header": "20px 0",
+    "footer": "20px 30px"
+  },
+  "components": {
+    "button": {
+      "borderRadius": "6px",
+      "fontSize": "16px",
+      "fontWeight": "bold"
+    },
+    "logo": {
+      "width": "150px"
+    }
+  }
+}

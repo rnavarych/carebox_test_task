@@ -1,0 +1,20 @@
+<%#
+  ============================================
+  SUPPORT NOTE PARTIAL
+  ============================================
+
+  Support contact information note.
+
+  Parameters:
+    - supportText: Custom support text (optional)
+  ============================================
+%>
+<!-- Support Note -->
+<mj-text padding-top="20px" font-size="12px" color="#6b7280">
+  <% if (typeof supportText !== 'undefined' && supportText) { %>
+    <%= supportText %>
+  <% } else { %>
+    If you have any questions, feel free to reach out to our support team
+    at <%= company.supportEmail %>.
+  <% } %>
+</mj-text>

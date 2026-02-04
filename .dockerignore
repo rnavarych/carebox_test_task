@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build artifacts (we rebuild in Docker)
+web/dist
+
+# Development files
+.git
+.gitignore
+.env
+.env.local
+.env.*
+*.env
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+web/logs/
+
+# Test outputs (recreated during build)
+test_reports/*.md
+test_reports/*.json
+web/artifacts/
+test_framework/output/
+
+# Documentation
+README.md
+*.md
+!email_templates/**/*.md
+
+# Docker files (don't need to copy these)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Cloud Build
+cloudbuild.yaml
+
+# Settings (contains API keys)
+.settings.json
+web/.settings.json

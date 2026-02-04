@@ -1,0 +1,45 @@
+<%- include('../shared/variables') %>
+<%
+  // Template-specific configuration
+  const primaryColor = '#2563eb'    // Blue
+  const headingColor = '#1f2937'    // Dark gray
+  const bgColor = '#f4f4f5'         // Light gray
+  const title = 'Welcome to ' + company.name
+  const previewText = 'Welcome, ' + visitor.name + '! We\'re excited to have you.'
+  const greeting = 'Hello'
+  const buttonText = 'Get Started Now'
+%>
+<!--
+  ============================================
+  SITE VISITOR WELCOME - BASE TEMPLATE
+  ============================================
+
+  Purpose: Standard welcome email sent to new site visitors
+  Color Scheme: Blue (#2563eb primary)
+  ============================================
+-->
+
+<mjml>
+  <%- include('../shared/partials/head', { title, previewText, primaryColor }) %>
+
+  <mj-body background-color="<%= bgColor %>">
+
+    <%- include('../shared/partials/header', { primaryColor }) %>
+
+    <!-- ========== MAIN CONTENT SECTION ========== -->
+    <mj-section background-color="#ffffff" padding="40px 30px">
+      <mj-column>
+
+        <%- include('../shared/partials/content-welcome', { greeting, headingColor }) %>
+
+        <%- include('../shared/partials/button-cta', { buttonText }) %>
+
+        <%- include('../shared/partials/support-note') %>
+
+      </mj-column>
+    </mj-section>
+
+    <%- include('../shared/partials/footer', { bgColor }) %>
+
+  </mj-body>
+</mjml>

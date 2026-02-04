@@ -1,0 +1,99 @@
+<%- include('../shared/variables') %>
+<%
+  // Template-specific configuration - SAME COLORS AS BASE
+  const primaryColor = '#2563eb'    // Blue
+  const headingColor = '#1f2937'    // Dark gray
+  const bgColor = '#f4f4f5'         // Light gray
+  const title = 'Welcome to ' + company.name
+  const previewText = 'Greetings, ' + visitor.name + '! Your journey begins here.'
+  const greeting = 'Greetings'
+  const buttonText = 'Begin Your Journey'
+  const supportText = 'Questions? Our dedicated support team is available 24/7 at ' + company.supportEmail + '.'
+%>
+<!--
+  ============================================
+  SITE VISITOR WELCOME - PARTNER B VARIATION
+  ============================================
+
+  Purpose: Welcome email for Partner B brand
+  Color Scheme: Blue (#2563eb primary) - SAME AS BASE
+
+  DIFFERENCE FROM BASE:
+    - Same color scheme
+    - DIFFERENT content and messaging
+    - Additional "What's Next?" section
+  ============================================
+-->
+
+<mjml>
+  <%- include('../shared/partials/head', { title, previewText, primaryColor }) %>
+
+  <mj-body background-color="<%= bgColor %>">
+
+    <%- include('../shared/partials/header', { primaryColor }) %>
+
+    <!-- ========== MAIN CONTENT SECTION ========== -->
+    <mj-section background-color="#ffffff" padding="40px 30px">
+      <mj-column>
+
+        <!-- Greeting - Different: "Greetings" instead of "Hello" -->
+        <mj-text
+          font-size="24px"
+          font-weight="bold"
+          color="<%= headingColor %>"
+          padding-bottom="20px"
+        >
+          <%= greeting %>, <%= visitor.name %>!
+        </mj-text>
+
+        <!-- Welcome Message - Different from base -->
+        <mj-text padding-bottom="20px">
+          Thank you for visiting us! We're honored to welcome you to our platform.
+          Your presence inspires us to deliver excellence every single day.
+        </mj-text>
+
+        <mj-text padding-bottom="20px">
+          You've taken the first step towards an amazing journey. Our team has
+          prepared a wealth of resources, tools, and insights just for you.
+          Discover what makes us different!
+        </mj-text>
+
+        <!-- ===== EXTRA SECTION - PARTNER B ONLY ===== -->
+        <mj-divider border-color="#e5e7eb" padding="10px 0" />
+
+        <mj-text
+          font-size="18px"
+          font-weight="bold"
+          color="<%= headingColor %>"
+          padding-bottom="10px"
+          padding-top="10px"
+        >
+          What's Next?
+        </mj-text>
+
+        <mj-text padding-bottom="20px">
+          Here are three things you can do right now:
+        </mj-text>
+
+        <mj-text padding-bottom="5px">
+          1. Complete your profile to personalize your experience
+        </mj-text>
+        <mj-text padding-bottom="5px">
+          2. Browse our featured content curated just for you
+        </mj-text>
+        <mj-text padding-bottom="20px">
+          3. Connect with our community of like-minded individuals
+        </mj-text>
+        <!-- ===== END EXTRA SECTION ===== -->
+
+        <%- include('../shared/partials/button-cta', { buttonText }) %>
+
+        <%- include('../shared/partials/support-note', { supportText }) %>
+
+      </mj-column>
+    </mj-section>
+
+    <%- include('../shared/partials/footer', { bgColor }) %>
+
+  </mj-body>
+</mjml>

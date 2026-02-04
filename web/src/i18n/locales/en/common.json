@@ -1,0 +1,75 @@
+{
+  "buttons": {
+    "save": "Save",
+    "reset": "Reset",
+    "cancel": "Cancel",
+    "create": "Create",
+    "delete": "Delete",
+    "refresh": "Refresh",
+    "runTests": "Run Tests",
+    "runAllTests": "Run All Tests",
+    "testConnection": "Test Connection",
+    "clear": "Clear",
+    "duplicate": "Duplicate",
+    "close": "Close",
+    "viewReports": "View Reports",
+    "viewLogs": "View Logs",
+    "goToTesting": "Go to Testing",
+    "openInNewTab": "Open in New Tab",
+    "restoreDefault": "Restore Default",
+    "addCredits": "Add credits"
+  },
+  "labels": {
+    "apiKey": "API Key",
+    "templateName": "Template Name",
+    "copyFrom": "Copy from (optional)",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "testing": "Testing...",
+    "running": "Running...",
+    "processing": "Processing...",
+    "templates": "Templates",
+    "selected": "selected",
+    "responsive": "Responsive",
+    "unsavedChanges": "Unsaved changes",
+    "availableBalance": "Available Balance",
+    "tokensUsed": "Tokens Used (This Month)",
+    "estimatedCost": "Estimated Cost",
+    "rateLimitStatus": "Rate Limit Status",
+    "requests": "Requests",
+    "tokens": "Tokens",
+    "lastUpdated": "Last updated"
+  },
+  "status": {
+    "passed": "PASSED",
+    "failed": "FAILED",
+    "running": "RUNNING",
+    "pending": "PENDING",
+    "error": "ERROR",
+    "warning": "WARNING",
+    "completed": "COMPLETED",
+    "success": "SUCCESS",
+    "unknown": "UNKNOWN",
+    "lowBalance": "Low Balance",
+    "defaultKeyActive": "Default Key Active",
+    "customKey": "Custom Key"
+  },
+  "placeholders": {
+    "apiKeyInput": "sk-ant-api03-...",
+    "templateNameInput": "e.g., Welcome Email Partner C",
+    "startFromScratch": "Start from scratch"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minute ago",
+    "minutesAgo_other": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago"
+  },
+  "units": {
+    "px": "px",
+    "bytes": "B",
+    "kilobytes": "KB",
+    "megabytes": "MB"
+  }
+}

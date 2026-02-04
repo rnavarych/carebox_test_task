@@ -1,0 +1,15 @@
+<%#
+  ============================================
+  CTA BUTTON PARTIAL
+  ============================================
+
+  Call-to-action button.
+
+  Parameters:
+    - buttonText: Button text (default: "Get Started Now")
+  ============================================
+%>
+<!-- Call-to-Action Button -->
+<mj-button href="<%= urls.cta %>" padding="20px 0">
+  <%= typeof buttonText !== 'undefined' ? buttonText : 'Get Started Now' %>
+</mj-button>

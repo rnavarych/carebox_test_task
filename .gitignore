@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Settings with secrets
+.settings.json
+web/.settings.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test outputs
+test_reports/*.md
+test_reports/*.json
+web/artifacts/
+web/logs/
+test_framework/output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

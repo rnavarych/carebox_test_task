@@ -1,0 +1,48 @@
+{
+  "success": {
+    "saved": "Saved successfully",
+    "connectionSuccessful": "Connection successful!",
+    "testsStarted": "Tests started!",
+    "testsStartedProgress": "Tests started! Check the progress bar above.",
+    "restoredDefaultKey": "Restored to default API key",
+    "autoTestEnabled": "Auto-testing enabled",
+    "autoTestDisabled": "Auto-testing disabled",
+    "templateCreated": "Template created successfully",
+    "templateDeleted": "Template deleted successfully",
+    "allTestsCompleted": "All tests completed successfully!"
+  },
+  "error": {
+    "failedToSave": "Failed to save: {{error}}",
+    "failedToDelete": "Failed to delete: {{error}}",
+    "failedToLoad": "Failed to load: {{error}}",
+    "failedToCreate": "Failed to create: {{error}}",
+    "failedToStartTests": "Failed to start tests: {{error}}",
+    "failedToRestoreKey": "Failed to restore default key: {{error}}",
+    "failedToUpdateAutoTest": "Failed to update auto-test setting",
+    "failedToSaveApiKey": "Failed to save API key: {{error}}",
+    "compilationError": "Compilation Error: {{error}}",
+    "testFailed": "Test failed - check reports for details"
+  },
+  "warning": {
+    "unsavedChanges": "Unsaved changes",
+    "lowBalance": "Low Balance",
+    "noTemplatesSelected": "Please select at least one template to test"
+  },
+  "confirm": {
+    "deleteTemplate": "Are you sure you want to delete \"{{name}}\"?",
+    "deleteReport": "Delete report \"{{title}}\"?",
+    "deleteTestPlan": "Delete test plan \"{{id}}\"?",
+    "deleteLog": "Delete log file \"{{file}}\"?",
+    "deleteLinkedItems": "This will also delete the following linked items:"
+  },
+  "pipeline": {
+    "init": "Starting test pipeline...",
+    "planner": "Analyzing requirements and creating test plans",
+    "analyzer": "Detecting file changes and modified templates",
+    "diff": "Comparing templates and detecting differences",
+    "reporter": "Creating comprehensive test report",
+    "complete": "All tests completed successfully!",
+    "error": "Test failed - check reports for details",
+    "templatesCount": "{{count}} template(s)"
+  }
+}

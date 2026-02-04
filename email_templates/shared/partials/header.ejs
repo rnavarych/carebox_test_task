@@ -1,0 +1,22 @@
+<%#
+  ============================================
+  HEADER PARTIAL
+  ============================================
+
+  Renders the email header with logo.
+
+  Parameters:
+    - primaryColor: Background color (default: #2563eb)
+  ============================================
+%>
+<!-- ========== HEADER SECTION ========== -->
+<mj-section background-color="<%= typeof primaryColor !== 'undefined' ? primaryColor : '#2563eb' %>" padding="20px 0">
+  <mj-column>
+    <mj-image
+      src="<%= company.logoUrl %>"
+      alt="<%= company.name %> Logo"
+      width="150px"
+      align="center"
+    />
+  </mj-column>
+</mj-section>

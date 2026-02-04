@@ -1,0 +1,34 @@
+{
+  "name": "email-template-test-framework",
+  "version": "2.0.0",
+  "description": "Multi-agent AI-driven email template QA system powered by Claude",
+  "type": "module",
+  "scripts": {
+    "compile": "node scripts/compile-templates.js",
+    "render": "node scripts/render-with-data.js",
+    "validate": "node scripts/validate-html.js",
+    "compare": "node scripts/compare-templates.js",
+    "screenshots": "node scripts/capture-screenshots.js",
+    "playwright": "node scripts/run-playwright-tests.js",
+    "test": "node scripts/run-all-tests.js",
+    "test:ci": "node scripts/run-all-tests.js --ci",
+    "test:full": "npm run compile && npm run playwright",
+    "agents": "node scripts/run-agents.js",
+    "agents:watch": "node scripts/run-agents.js --watch",
+    "agents:server": "node scripts/run-agents.js --server",
+    "watch": "node scripts/watch-templates.js",
+    "server": "node scripts/api-server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.1",
+    "chokidar": "^5.0.0",
+    "diff": "^5.1.0",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.9",
+    "html-validate": "^8.9.0",
+    "mjml": "^4.15.3",
+    "pixelmatch": "^7.1.0",
+    "playwright": "^1.41.0",
+    "pngjs": "^7.0.0"
+  }
+}

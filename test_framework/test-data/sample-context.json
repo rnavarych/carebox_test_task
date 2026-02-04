@@ -1,0 +1,14 @@
+{
+  "context": {
+    "visitorName": "John Doe",
+    "logoUrl": "/templates/shared/carebox_logo.png",
+    "ctaUrl": "https://example.com/get-started",
+    "supportEmail": "support@example.com",
+    "companyName": "Carebox",
+    "companyAddress": "123 Main Street, San Francisco, CA 94102",
+    "privacyUrl": "https://example.com/privacy",
+    "termsUrl": "https://example.com/terms",
+    "unsubscribeUrl": "https://example.com/unsubscribe",
+    "currentYear": "2026"
+  }
+}

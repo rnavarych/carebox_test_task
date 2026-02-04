@@ -1,0 +1,42 @@
+<!--
+  Shared Styles for Email Templates
+
+  This file contains common MJML attributes and styles
+  that can be referenced across all templates.
+
+  Color Schemes:
+  - Base/Partner B (Blue): #2563eb (primary), #1f2937 (heading), #f4f4f5 (background)
+  - Partner A (Green): #16a34a (primary), #166534 (heading), #f0fdf4 (background)
+
+  Typography:
+  - Font Family: 'Helvetica Neue', Helvetica, Arial, sans-serif
+  - Body: 14px, line-height 1.6
+  - Heading: 24px, bold
+  - Small: 12px
+-->
+
+<mj-style>
+  /* Link styles */
+  .footer-link {
+    color: #666666;
+    text-decoration: none;
+  }
+  .footer-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Button hover effect (for supported clients) */
+  .cta-button:hover {
+    opacity: 0.9;
+  }
+
+  /* Responsive adjustments */
+  @media only screen and (max-width: 480px) {
+    .mobile-full-width {
+      width: 100% !important;
+    }
+    .mobile-padding {
+      padding: 20px 15px !important;
+    }
+  }
+</mj-style>

@@ -1,0 +1,43 @@
+<%#
+  ============================================
+  SHARED TEMPLATE VARIABLES
+  ============================================
+
+  This file defines default values for all template variables.
+  Import this file at the top of your templates.
+
+  Variables can be overridden by the context passed during rendering.
+  ============================================
+%>
+
+<%
+// Company Information - attached to locals for scope sharing
+locals.company = {
+  name: (locals.context && locals.context.companyName) || 'Carebox',
+  address: (locals.context && locals.context.companyAddress) || '123 Main Street, San Francisco, CA 94102',
+  logoUrl: (locals.context && locals.context.logoUrl) || '/templates/shared/carebox_logo.png',
+  supportEmail: (locals.context && locals.context.supportEmail) || 'support@example.com'
+};
+
+// Visitor Information
+locals.visitor = {
+  name: (locals.context && locals.context.visitorName) || 'Valued Visitor'
+};
+
+// URLs
+locals.urls = {
+  cta: (locals.context && locals.context.ctaUrl) || 'https://example.com/get-started',
+  privacy: (locals.context && locals.context.privacyUrl) || 'https://example.com/privacy',
+  terms: (locals.context && locals.context.termsUrl) || 'https://example.com/terms',
+  unsubscribe: (locals.context && locals.context.unsubscribeUrl) || 'https://example.com/unsubscribe'
+};
+
+// Dynamic Values
+locals.currentYear = (locals.context && locals.context.currentYear) || new Date().getFullYear();
+
+// Make them available as direct variables for convenience
+var company = locals.company;
+var visitor = locals.visitor;
+var urls = locals.urls;
+var currentYear = locals.currentYear;
+%>

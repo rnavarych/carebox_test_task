@@ -1,0 +1,19 @@
+{
+  "menu": {
+    "testTask": "Test Task",
+    "source": "Source",
+    "pipeline": "Pipeline",
+    "testPlans": "Test Plans",
+    "logs": "Logs",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "header": {
+    "appName": "AI AQA",
+    "appSubtitle": "Testing Panel"
+  },
+  "footer": {
+    "allRequirementsMet": "All Requirements Met",
+    "poweredBy": "AI-Powered QA System"
+  }
+}

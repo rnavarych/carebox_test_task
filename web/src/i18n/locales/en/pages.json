@@ -1,0 +1,91 @@
+{
+  "emailTemplates": {
+    "title": "Templates",
+    "createTemplate": "Create Template",
+    "duplicateTemplate": "Duplicate Template",
+    "createNew": "Create New Template",
+    "selectToEdit": "Select a template to edit",
+    "orCreateNew": "or create a new one",
+    "preview": "Preview",
+    "edit": "Edit",
+    "html": "HTML",
+    "fileName": "File",
+    "copyingFrom": "Copying from",
+    "breakpoint": {
+      "mobile": "Mobile Breakpoint",
+      "tablet": "Tablet Breakpoint",
+      "desktop": "Desktop Breakpoint"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Configure API keys and preferences",
+    "apiKey": {
+      "title": "Claude API Key",
+      "usingDefault": "Using default API key (provided by system)",
+      "enterYourKey": "Enter your Anthropic API key to enable AI-powered testing",
+      "getApiKey": "Get your API key from Anthropic Console",
+      "savedSuccessfully": "API key saved successfully",
+      "usingCustomKey": "Using custom API key. Default key is available."
+    },
+    "autoTest": {
+      "title": "Auto-Testing",
+      "subtitle": "Automatically run tests when templates are modified",
+      "enable": "Enable Auto-Testing",
+      "description": "Tests will run automatically when you create, update, or delete templates",
+      "enabledInfo": "Tests will automatically start when templates are created, updated, or deleted. You can monitor progress on the Testing page."
+    },
+    "usage": {
+      "title": "Usage & Balance",
+      "subtitle": "Monitor your API usage and remaining credits",
+      "addKeyToView": "Add your API key to view usage information",
+      "clickRefresh": "Click \"Refresh\" to load usage data",
+      "viewBilling": "View Billing in Anthropic Console"
+    },
+    "info": {
+      "title": "About API Usage",
+      "keyStoredLocally": "Your API key is stored locally and never shared",
+      "defaultModel": "The multi-agent testing system uses Claude 3.5 Sonnet by default",
+      "tokensPerTest": "Each test run typically uses 5,000-15,000 tokens",
+      "costPerTest": "Estimated cost per test: $0.01-$0.05"
+    }
+  },
+  "testing": {
+    "title": "Testing",
+    "subtitle": "Multi-Agent AI Testing System",
+    "pipeline": {
+      "title": "AI Agents Pipeline"
+    },
+    "console": {
+      "title": "Console Output",
+      "subtitle": "Real-time test execution logs",
+      "noLogs": "No logs yet. Run tests to see output here."
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Test Results & Analysis History",
+    "noReports": "No Reports Available",
+    "runTestsToGenerate": "Run tests to generate reports",
+    "loadingReports": "Loading reports...",
+    "loadingContent": "Loading report content...",
+    "errorLoading": "Error Loading Reports",
+    "testPlans": "Test Plans"
+  },
+  "logs": {
+    "title": "Logs",
+    "subtitle": "Test execution logs history",
+    "logFiles": "Log Files",
+    "noLogs": "No logs yet",
+    "runTestsToGenerate": "Run tests to generate logs",
+    "selectLogFile": "Select a log file to view contents",
+    "viewReport": "View Report",
+    "report": "Report"
+  },
+  "testPlans": {
+    "title": "Test Plans",
+    "subtitle": "AI-Generated Test Plans",
+    "noPlans": "No Test Plans Yet",
+    "runTestsToGenerate": "Run tests to generate test plans"
+  }
+}
