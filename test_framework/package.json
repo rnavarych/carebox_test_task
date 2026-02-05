@@ -9,7 +9,7 @@
     "validate": "node scripts/validate-html.js",
     "compare": "node scripts/compare-templates.js",
     "screenshots": "node scripts/capture-screenshots.js",
-    "playwright": "node scripts/run-playwright-tests.js",
+    "playwright": "node scripts/run-dynamic-tests.js",
     "test": "node scripts/run-all-tests.js",
     "test:ci": "node scripts/run-all-tests.js --ci",
     "test:full": "npm run compile && npm run playwright",
