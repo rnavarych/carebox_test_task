@@ -86,8 +86,8 @@ ENV PORT=8080
 # Expose port
 EXPOSE 8080
 
-# Use tini as init system
-ENTRYPOINT ["/sbin/tini", "--"]
+# Use tini as init system (installed to /usr/bin on Debian-based images)
+ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start the application
 CMD ["node", "web/server.js"]
