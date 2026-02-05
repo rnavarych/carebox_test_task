@@ -31,8 +31,12 @@ const LOGS_DIR = path.resolve(__dirname, 'logs');
 const PLANS_DIR = path.resolve(TEST_FRAMEWORK_DIR, 'output/test-plans');
 const SETTINGS_FILE = path.resolve(__dirname, '.settings.json');
 
+// Screenshot and diff directories
+const SCREENSHOTS_DIR = path.resolve(TEST_FRAMEWORK_DIR, 'output/screenshots');
+const DIFFS_DIR = path.resolve(TEST_FRAMEWORK_DIR, 'output/diffs');
+
 // Ensure directories exist
-[ARTIFACTS_DIR, LOGS_DIR, REPORTS_DIR, PLANS_DIR].forEach(dir => {
+[ARTIFACTS_DIR, LOGS_DIR, REPORTS_DIR, PLANS_DIR, SCREENSHOTS_DIR, DIFFS_DIR].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -197,14 +201,22 @@ const triggerAutoTest = (changedTemplate) => {
     if (text.includes('[STEP:planner]')) {
       testState.currentTest.step = 'planner';
       testState.currentTest.stepDescription = 'Analyzing requirements...';
-      testState.currentTest.progress = 25;
+      testState.currentTest.progress = 15;
     } else if (text.includes('[STEP:analyzer]')) {
       testState.currentTest.step = 'analyzer';
       testState.currentTest.stepDescription = 'Detecting changes...';
-      testState.currentTest.progress = 50;
+      testState.currentTest.progress = 30;
+    } else if (text.includes('[STEP:generator]')) {
+      testState.currentTest.step = 'generator';
+      testState.currentTest.stepDescription = 'AI generating test cases...';
+      testState.currentTest.progress = 45;
     } else if (text.includes('[STEP:diff]')) {
       testState.currentTest.step = 'diff';
       testState.currentTest.stepDescription = 'Comparing templates...';
+      testState.currentTest.progress = 60;
+    } else if (text.includes('[STEP:playwright]')) {
+      testState.currentTest.step = 'playwright';
+      testState.currentTest.stepDescription = 'Running AI-generated tests...';
       testState.currentTest.progress = 75;
     } else if (text.includes('[STEP:reporter]')) {
       testState.currentTest.step = 'reporter';
@@ -494,14 +506,22 @@ app.post('/api/run-tests', (req, res) => {
     if (text.includes('[STEP:planner]')) {
       testState.currentTest.step = 'planner';
       testState.currentTest.stepDescription = 'Analyzing requirements...';
-      testState.currentTest.progress = 25;
+      testState.currentTest.progress = 15;
     } else if (text.includes('[STEP:analyzer]')) {
       testState.currentTest.step = 'analyzer';
       testState.currentTest.stepDescription = 'Detecting changes...';
-      testState.currentTest.progress = 50;
+      testState.currentTest.progress = 30;
+    } else if (text.includes('[STEP:generator]')) {
+      testState.currentTest.step = 'generator';
+      testState.currentTest.stepDescription = 'AI generating test cases...';
+      testState.currentTest.progress = 45;
     } else if (text.includes('[STEP:diff]')) {
       testState.currentTest.step = 'diff';
       testState.currentTest.stepDescription = 'Comparing templates...';
+      testState.currentTest.progress = 60;
+    } else if (text.includes('[STEP:playwright]')) {
+      testState.currentTest.step = 'playwright';
+      testState.currentTest.stepDescription = 'Running AI-generated tests...';
       testState.currentTest.progress = 75;
     } else if (text.includes('[STEP:reporter]')) {
       testState.currentTest.step = 'reporter';
@@ -958,6 +978,117 @@ app.get('/artifacts/:file', (req, res) => {
     res.type('text/html').send(fs.readFileSync(filePath, 'utf-8'));
   } else {
     res.status(404).send('Not found');
+  }
+});
+
+// Serve screenshots
+app.get('/screenshots/diffs/*', (req, res) => {
+  const urlPath = req.params[0];
+  const filePath = path.join(DIFFS_DIR, urlPath);
+
+  // Security check
+  const normalizedPath = path.normalize(filePath);
+  if (!normalizedPath.startsWith(DIFFS_DIR)) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeTypes = {
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp'
+    };
+    res.type(mimeTypes[ext] || 'application/octet-stream');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(fs.readFileSync(filePath));
+  } else {
+    res.status(404).json({ error: 'Diff image not found', path: urlPath });
+  }
+});
+
+app.get('/screenshots/*', (req, res) => {
+  const urlPath = req.params[0];
+  const filePath = path.join(SCREENSHOTS_DIR, urlPath);
+
+  // Security check
+  const normalizedPath = path.normalize(filePath);
+  if (!normalizedPath.startsWith(SCREENSHOTS_DIR)) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath).toLowerCase();
+    const mimeTypes = {
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.webp': 'image/webp'
+    };
+    res.type(mimeTypes[ext] || 'application/octet-stream');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(fs.readFileSync(filePath));
+  } else {
+    res.status(404).json({ error: 'Screenshot not found', path: urlPath });
+  }
+});
+
+// API: List screenshots
+app.get('/api/screenshots', (req, res) => {
+  try {
+    if (!fs.existsSync(SCREENSHOTS_DIR)) {
+      return res.json({ screenshots: [] });
+    }
+
+    const files = fs.readdirSync(SCREENSHOTS_DIR).filter(f =>
+      ['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(path.extname(f).toLowerCase())
+    );
+
+    const screenshots = files.map(file => {
+      const filePath = path.join(SCREENSHOTS_DIR, file);
+      const stats = fs.statSync(filePath);
+      return {
+        file,
+        url: `/screenshots/${file}`,
+        createdAt: stats.birthtime,
+        size: stats.size
+      };
+    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({ screenshots });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: List diffs
+app.get('/api/diffs', (req, res) => {
+  try {
+    if (!fs.existsSync(DIFFS_DIR)) {
+      return res.json({ diffs: [] });
+    }
+
+    const files = fs.readdirSync(DIFFS_DIR).filter(f =>
+      ['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(path.extname(f).toLowerCase())
+    );
+
+    const diffs = files.map(file => {
+      const filePath = path.join(DIFFS_DIR, file);
+      const stats = fs.statSync(filePath);
+      return {
+        file,
+        url: `/screenshots/diffs/${file}`,
+        createdAt: stats.birthtime,
+        size: stats.size
+      };
+    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({ diffs });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

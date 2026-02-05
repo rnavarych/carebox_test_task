@@ -33,10 +33,11 @@ RUN npm run build
 # ================================
 # Stage 2: Production image
 # ================================
-FROM node:20-alpine AS production
+# Use Playwright's official image which has all browser dependencies
+FROM mcr.microsoft.com/playwright:v1.41.0-jammy AS production
 
-# Install required packages
-RUN apk add --no-cache tini
+# Install Node.js 20 and tini
+RUN apt-get update && apt-get install -y tini && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -55,9 +56,6 @@ RUN npm ci --production
 
 WORKDIR /app/test_framework
 RUN npm ci --production
-
-# Install Playwright browsers for screenshot testing
-RUN npx playwright install chromium --with-deps || true
 
 WORKDIR /app
 
