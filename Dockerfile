@@ -33,11 +33,28 @@ RUN npm run build
 # ================================
 # Stage 2: Production image
 # ================================
-# Use Playwright's official image which has all browser dependencies
-FROM mcr.microsoft.com/playwright:v1.41.0-jammy AS production
+FROM node:20-slim AS production
 
-# Install Node.js 20 and tini
-RUN apt-get update && apt-get install -y tini && rm -rf /var/lib/apt/lists/*
+# Install required packages for Chromium
+RUN apt-get update && apt-get install -y \
+    tini \
+    chromium \
+    fonts-liberation \
+    libnss3 \
+    libatk-bridge2.0-0 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Playwright to use system Chromium
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 

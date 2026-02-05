@@ -49,7 +49,15 @@ class DynamicTestRunner {
 
   async initialize() {
     this.log('Initializing Dynamic Test Runner...');
-    this.browser = await chromium.launch({ headless: true });
+
+    // Use system Chromium if available (for Docker/production)
+    const launchOptions = { headless: true };
+    if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+      launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+      this.log(`Using system Chromium: ${launchOptions.executablePath}`);
+    }
+
+    this.browser = await chromium.launch(launchOptions);
     this.context = await this.browser.newContext();
 
     await fs.mkdir(SCREENSHOTS_DIR, { recursive: true });
