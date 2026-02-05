@@ -119,14 +119,46 @@ async function main() {
     // Save log file with same timestamp pattern
     await saveLogFile(runTimestamp);
 
+    // Print artifact links
     console.log('');
     console.log('═'.repeat(60));
-    console.log('Artifacts saved to web app:');
-    console.log(`  - Report: web/artifacts/report-*.html`);
-    console.log(`  - Logs: web/logs/test-${runTimestamp}.log`);
-    console.log(`  - Test Plan: test_framework/output/test-plans/test-plan-*.json`);
+    console.log('📁 ARTIFACTS');
+    console.log('═'.repeat(60));
     console.log('');
-    console.log('View results at: http://localhost:5173/reports');
+
+    // Report links
+    if (result.report?.htmlReportPath) {
+      console.log(`📊 HTML Report:`);
+      console.log(`   ${result.report.htmlReportPath}`);
+    }
+    if (result.reportPath) {
+      console.log(`📄 Markdown Report:`);
+      console.log(`   ${result.reportPath}`);
+    }
+
+    // Log link
+    const logPath = path.resolve(WEB_LOGS_DIR, `test-${runTimestamp}.log`);
+    console.log(`📝 Log:`);
+    console.log(`   ${logPath}`);
+
+    // Test Plan link
+    const testPlanPath = path.resolve(__dirname, `../output/test-plans/test-plan-${runTimestamp}.json`);
+    console.log(`📋 Test Plan:`);
+    console.log(`   ${testPlanPath}`);
+
+    // Generated Tests link
+    const generatedTestsPath = path.resolve(__dirname, '../output/generated-tests/test-cases.json');
+    console.log(`🤖 Generated Tests:`);
+    console.log(`   ${generatedTestsPath}`);
+
+    // Screenshots/Diffs
+    const diffsDir = path.resolve(__dirname, '../output/diffs');
+    console.log(`📸 Visual Diffs:`);
+    console.log(`   ${diffsDir}/`);
+
+    console.log('');
+    console.log('─'.repeat(60));
+    console.log(`🌐 Web UI: http://localhost:5173/reports`);
     console.log('═'.repeat(60));
 
     process.exit(result.status === 'complete' ? 0 : 1);
