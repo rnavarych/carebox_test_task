@@ -56,24 +56,29 @@ Priority: [priority] | Tests: X passed, X failed
 
 IMPORTANT: Include ALL test cases from Playwright results with their actual status and assertions.
 
-## AI Analysis Results
+## AI Analysis Results (REGRESSION MODE)
 
 ### Template Comparison Analysis
 
-#### Partner A vs Base Template
-**Expected:** Styling differences only (green vs blue color scheme)
+**REGRESSION MODE:** All templates must match the base template exactly. ANY difference = FAILURE.
 
-Partner A comparison ✅ PASSED (or Partner A comparison ❌ FAILED)
+#### Partner A vs Base Template
+**Regression Test:** Must be identical to base (no styling differences allowed)
+
+If Partner A has ANY differences (e.g., green vs blue colors): Partner A comparison ❌ FAILED
+If Partner A is identical to base: Partner A comparison ✅ PASSED
 
 Key findings as bullet points.
 
 #### Partner B vs Base Template
-**Expected:** Content differences (additional sections)
+**Regression Test:** Must be identical to base (no content differences allowed)
 
-Partner B comparison ✅ PASSED (or Partner B comparison ❌ FAILED)
+If Partner B has ANY differences (e.g., different text content): Partner B comparison ❌ FAILED
+If Partner B is identical to base: Partner B comparison ✅ PASSED
 
 Key findings as bullet points.
 
+IMPORTANT: In regression mode, use ❌ FAILED for ANY template with differences. Use ✅ PASSED only when template is identical to base.
 IMPORTANT: Always write "Partner A" or "Partner B" followed by status emoji (✅/❌/⚠️) on the same line for clickable links.
 
 ## Issues Found
@@ -401,27 +406,34 @@ ${JSON.stringify(diffAnalysis, null, 2)}
 
 ## REQUIREMENTS
 
+**REGRESSION MODE IS ACTIVE**: This is a regression test where ALL templates MUST be identical to the base template.
+- If a template has ANY difference (colors, content, structure), it FAILS
+- Check the "regressionStatus" and "isAsExpected" fields in diffAnalysis comparisons
+- Partner A has styling differences (green vs blue) = ❌ FAILED
+- Partner B has content differences = ❌ FAILED
+
 1. Follow the EXACT report structure from your system prompt
 2. **CRITICAL**: ONLY include results for the templates listed above: ${templatesListStr}
 3. Do NOT include any templates that are not in the tested list
-4. **TEST PLAN ALIGNMENT**: Tests use IDs TC001-TC023 matching the test plan. Group by suite:
+4. **REGRESSION STATUS**: Use the "regressionStatus" field from each comparison to determine PASS/FAIL
+5. **TEST PLAN ALIGNMENT**: Tests use IDs TC001-TC023 matching the test plan. Group by suite:
    - Template Compilation (TC001-TC004): Verify MJML compiles to valid HTML
    - EJS Variable Rendering (TC005-TC008): Verify EJS variables render correctly
    - Color Scheme Validation (TC009-TC012): Verify correct colors per template
    - Content Validation (TC013-TC016): Verify text content
    - Structure Validation (TC017-TC020): Verify HTML structure per template
    - Cross-Template Comparison (TC021-TC023): Compare templates visually
-5. Include the "Automated Test Results" section organized by test suite
-6. Create a table for EACH SUITE showing test cases with ID, name, status, duration, and key findings
-7. Use proper markdown tables (with header separator row using dashes)
-8. Include metrics with actual values from both Playwright and AI analysis
-9. Include "AI Analysis Results" section with comparisons for tested templates only
-10. List specific issues found with severity levels AND source (Playwright/AI)
-11. Provide actionable recommendations based on BOTH Playwright and AI findings
-12. Use emoji indicators: ✅ pass, ❌ fail, ⚠️ warning, ⏭️ skipped
-13. Keep the report professional and scannable
-14. The Executive Summary should reflect COMBINED results from both Playwright and AI
-15. **IMPORTANT FOR FAILED TESTS**: When a test has screenshots available, include diff links
+6. Include the "Automated Test Results" section organized by test suite
+7. Create a table for EACH SUITE showing test cases with ID, name, status, duration, and key findings
+8. Use proper markdown tables (with header separator row using dashes)
+9. Include metrics with actual values from both Playwright and AI analysis
+10. Include "AI Analysis Results" section with comparisons for tested templates only
+11. List specific issues found with severity levels AND source (Playwright/AI)
+12. Provide actionable recommendations based on BOTH Playwright and AI findings
+13. Use emoji indicators: ✅ pass, ❌ fail, ⚠️ warning, ⏭️ skipped
+14. Keep the report professional and scannable
+15. The Executive Summary should reflect COMBINED results from both Playwright and AI
+16. **IMPORTANT FOR FAILED TESTS**: When a test has screenshots available, include diff links
 
 Generate the complete markdown report now:`;
 

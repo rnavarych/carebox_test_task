@@ -229,8 +229,15 @@ export class DiffAnalyzerAgent extends BaseAgent {
         }
       }
 
-    // Ask AI to analyze the comparisons
-    const prompt = `Analyze the following template comparisons:
+    // Ask AI to analyze the comparisons - REGRESSION MODE
+    const prompt = `Analyze the following template comparisons in REGRESSION MODE.
+
+## REGRESSION MODE RULES
+In regression mode, ALL templates must be IDENTICAL to the base template.
+- ANY color difference = FAILURE
+- ANY content difference = FAILURE
+- ANY structural difference = FAILURE
+The goal is to catch regressions where templates have diverged from the base.
 
 ## Templates Loaded
 ${Object.entries(templates).map(([name, t]) => `- ${name}: ${t.success ? 'loaded' : 'failed'}`).join('\n')}
@@ -238,14 +245,14 @@ ${Object.entries(templates).map(([name, t]) => `- ${name}: ${t.success ? 'loaded
 ## Comparisons
 ${JSON.stringify(comparisons, null, 2)}
 
-## Expected Differences
-- Partner A (site_visitor_welcome_partner_a): Should have DIFFERENT COLORS but SAME CONTENT as base
-- Partner B (site_visitor_welcome_partner_b): Should have SAME COLORS but DIFFERENT CONTENT as base
+## Known Template Characteristics (for context, NOT for passing)
+- Partner A (site_visitor_welcome_partner_a): Has styling differences (green vs blue) - this is a REGRESSION FAILURE
+- Partner B (site_visitor_welcome_partner_b): Has content differences - this is a REGRESSION FAILURE
 
 Analyze each comparison and determine:
-1. Are the differences as expected?
-2. Are there any unintended differences?
-3. What is your overall assessment?
+1. Does the template have ANY differences from base? If yes, it FAILS regression.
+2. What specific differences exist?
+3. Overall assessment should be 'fail' if ANY template has differences.
 
 Respond with your analysis in JSON format.`;
 
@@ -262,11 +269,19 @@ Respond with your analysis in JSON format.`;
       this.log(`Failed to parse JSON response: ${e.message}`);
     }
 
+      // REGRESSION MODE: Determine overall assessment based on comparison results
+      // If ANY comparison has differences, overall assessment is 'fail'
+      const hasFailures = comparisons.some(c => c.regressionStatus === 'FAIL' || !c.isAsExpected);
+      const overallAssessment = hasFailures ? 'fail' : 'pass';
+
       return {
         analysisComplete: true,
         comparisons: comparisons,
-        overallAssessment: 'warning',
-        recommendations: ['Manual review recommended'],
+        overallAssessment: overallAssessment,
+        mode: 'regression',
+        recommendations: hasFailures
+          ? ['Templates have diverged from base - investigate differences', 'All templates must match base in regression mode']
+          : ['All templates match base template'],
         rawResponse: response.content
       };
     } finally {
@@ -397,14 +412,6 @@ Respond with your analysis in JSON format.`;
       }
     }
 
-    // Determine expected difference type
-    let expectedDifferenceType = 'none';
-    if (compareName.includes('partner_a')) {
-      expectedDifferenceType = 'styling';
-    } else if (compareName.includes('partner_b')) {
-      expectedDifferenceType = 'content';
-    }
-
     // Determine actual difference type
     const hasColorDiff = addedColors.length > 0 || removedColors.length > 0;
     const hasContentDiff = textChanges > 0;
@@ -416,6 +423,16 @@ Respond with your analysis in JSON format.`;
       actualDifferenceType = 'styling';
     } else if (hasContentDiff) {
       actualDifferenceType = 'content';
+    }
+
+    // REGRESSION MODE: What type of difference exists (for informational purposes)
+    // Partner A has styling differences (green vs blue)
+    // Partner B has content differences (different text)
+    let differenceDescription = 'none';
+    if (compareName.includes('partner_a')) {
+      differenceDescription = 'styling (green vs blue color scheme)';
+    } else if (compareName.includes('partner_b')) {
+      differenceDescription = 'content (different text)';
     }
 
     // Generate visual comparison screenshots
@@ -435,6 +452,10 @@ Respond with your analysis in JSON format.`;
       this.log(`  Screenshot generation failed: ${error.message}`);
     }
 
+    // REGRESSION MODE: ANY difference from base = FAIL
+    // Templates should be identical to base template
+    const hasDifferences = actualDifferenceType !== 'none';
+
     return {
       baseTemplate: baseName,
       compareTemplate: compareName,
@@ -448,10 +469,11 @@ Respond with your analysis in JSON format.`;
         hasChanges: hasContentDiff
       },
       structuralDifferences: structureDiffs,
-      expectedDifferenceType,
+      differenceDescription,
       actualDifferenceType,
-      isAsExpected: expectedDifferenceType === actualDifferenceType ||
-                    (expectedDifferenceType === 'content' && actualDifferenceType === 'both'),
+      // REGRESSION MODE: Pass only if NO differences exist
+      isAsExpected: !hasDifferences,
+      regressionStatus: hasDifferences ? 'FAIL' : 'PASS',
       screenshots
     };
   }
