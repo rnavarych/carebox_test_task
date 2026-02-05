@@ -1,12 +1,21 @@
 import { BaseAgent } from './base-agent.js';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mjml2html from 'mjml';
 import { diffLines } from 'diff';
+import { chromium } from 'playwright';
+import pixelmatch from 'pixelmatch';
+import { PNG } from 'pngjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Output directories
+const SCREENSHOTS_DIR = path.resolve(__dirname, '../output/screenshots');
+const DIFFS_DIR = path.resolve(__dirname, '../output/diffs');
+const COMPILED_DIR = path.resolve(__dirname, '../output/compiled');
 
 const SYSTEM_PROMPT = `You are the Diff Analyzer Agent in a multi-agent email template QA system.
 
@@ -49,37 +58,176 @@ export class DiffAnalyzerAgent extends BaseAgent {
   constructor() {
     super('DiffAnalyzer', SYSTEM_PROMPT);
     this.templatesDir = path.resolve(__dirname, '../../email_templates/emails');
+    this.browser = null;
+  }
+
+  async initBrowser() {
+    if (!this.browser) {
+      const launchOptions = { headless: true };
+      if (process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH) {
+        launchOptions.executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+      }
+      this.browser = await chromium.launch(launchOptions);
+    }
+    return this.browser;
+  }
+
+  async closeBrowser() {
+    if (this.browser) {
+      await this.browser.close();
+      this.browser = null;
+    }
+  }
+
+  async captureScreenshot(htmlContent, outputPath) {
+    const browser = await this.initBrowser();
+    const page = await browser.newPage();
+    await page.setViewportSize({ width: 800, height: 600 });
+    await page.setContent(htmlContent, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: outputPath, fullPage: true });
+    await page.close();
+  }
+
+  async createVisualComparison(baseName, baseHtml, compareName, compareHtml) {
+    try {
+      // Ensure directories exist
+      await fs.mkdir(SCREENSHOTS_DIR, { recursive: true });
+      await fs.mkdir(DIFFS_DIR, { recursive: true });
+
+      // Capture screenshots
+      const basePath = path.join(SCREENSHOTS_DIR, `${baseName}.png`);
+      const comparePath = path.join(SCREENSHOTS_DIR, `${compareName}.png`);
+
+      await this.captureScreenshot(baseHtml, basePath);
+      await this.captureScreenshot(compareHtml, comparePath);
+
+      // Create diff image
+      const baseImg = PNG.sync.read(fsSync.readFileSync(basePath));
+      const compareImg = PNG.sync.read(fsSync.readFileSync(comparePath));
+
+      const width = Math.max(baseImg.width, compareImg.width);
+      const height = Math.max(baseImg.height, compareImg.height);
+      const diff = new PNG({ width, height });
+
+      // Pad images to same size
+      const baseData = this.padImage(baseImg, width, height);
+      const compareData = this.padImage(compareImg, width, height);
+
+      const numDiffPixels = pixelmatch(baseData, compareData, diff.data, width, height, {
+        threshold: 0.1,
+        includeAA: true,
+        diffColor: [255, 0, 128],
+        diffColorAlt: [255, 255, 0],
+        alpha: 0.1
+      });
+
+      const totalPixels = width * height;
+      const diffPercentage = (numDiffPixels / totalPixels) * 100;
+
+      // Save diff image
+      const diffPath = path.join(DIFFS_DIR, `diff-${compareName}.png`);
+      fsSync.writeFileSync(diffPath, PNG.sync.write(diff));
+
+      // Create side-by-side comparison
+      const sideBySidePath = await this.createSideBySide(baseImg, compareImg, diff, compareName, width, height);
+
+      return {
+        basePath: path.basename(basePath),
+        comparePath: path.basename(comparePath),
+        diffPath: path.basename(diffPath),
+        sideBySidePath: path.basename(sideBySidePath),
+        diffPercentage: diffPercentage.toFixed(2)
+      };
+    } catch (error) {
+      this.log(`Screenshot comparison failed: ${error.message}`);
+      return null;
+    }
+  }
+
+  padImage(img, targetWidth, targetHeight) {
+    if (img.width === targetWidth && img.height === targetHeight) {
+      return img.data;
+    }
+    const paddedData = Buffer.alloc(targetWidth * targetHeight * 4, 255);
+    for (let y = 0; y < img.height; y++) {
+      for (let x = 0; x < img.width; x++) {
+        const srcIdx = (y * img.width + x) * 4;
+        const dstIdx = (y * targetWidth + x) * 4;
+        paddedData[dstIdx] = img.data[srcIdx];
+        paddedData[dstIdx + 1] = img.data[srcIdx + 1];
+        paddedData[dstIdx + 2] = img.data[srcIdx + 2];
+        paddedData[dstIdx + 3] = img.data[srcIdx + 3];
+      }
+    }
+    return paddedData;
+  }
+
+  async createSideBySide(baseImg, compareImg, diffImg, name, width, height) {
+    const padding = 10;
+    const totalWidth = (width * 3) + (padding * 4);
+    const totalHeight = height + (padding * 2);
+    const sideBySide = new PNG({ width: totalWidth, height: totalHeight });
+
+    // Fill white background
+    for (let i = 0; i < sideBySide.data.length; i += 4) {
+      sideBySide.data[i] = sideBySide.data[i + 1] = sideBySide.data[i + 2] = sideBySide.data[i + 3] = 255;
+    }
+
+    // Copy images
+    this.copyImage(sideBySide, baseImg, padding, padding);
+    this.copyImage(sideBySide, compareImg, width + padding * 2, padding);
+    this.copyImage(sideBySide, diffImg, width * 2 + padding * 3, padding);
+
+    const sideBySidePath = path.join(DIFFS_DIR, `comparison-${name}.png`);
+    fsSync.writeFileSync(sideBySidePath, PNG.sync.write(sideBySide));
+    return sideBySidePath;
+  }
+
+  copyImage(dest, src, offsetX, offsetY) {
+    for (let y = 0; y < src.height; y++) {
+      for (let x = 0; x < src.width; x++) {
+        const srcIdx = (y * src.width + x) * 4;
+        const destIdx = ((y + offsetY) * dest.width + (x + offsetX)) * 4;
+        if (destIdx >= 0 && destIdx < dest.data.length - 3) {
+          dest.data[destIdx] = src.data[srcIdx];
+          dest.data[destIdx + 1] = src.data[srcIdx + 1];
+          dest.data[destIdx + 2] = src.data[srcIdx + 2];
+          dest.data[destIdx + 3] = src.data[srcIdx + 3];
+        }
+      }
+    }
   }
 
   async analyzeTemplates(templateNames) {
     this.log(`Analyzing ${templateNames.length} template(s)`);
 
-    // Load and compile all templates
-    const templates = {};
-    for (const name of templateNames) {
-      templates[name] = await this.loadAndCompileTemplate(name);
-    }
-
-    // Perform comparisons
-    const baseTemplateName = 'site_visitor_welcome';
-    const comparisons = [];
-
-    // Ensure base template is loaded
-    if (!templates[baseTemplateName]) {
-      templates[baseTemplateName] = await this.loadAndCompileTemplate(baseTemplateName);
-    }
-
-    for (const name of templateNames) {
-      if (name !== baseTemplateName && templates[baseTemplateName] && templates[name]) {
-        const comparison = await this.compareTemplates(
-          baseTemplateName,
-          templates[baseTemplateName],
-          name,
-          templates[name]
-        );
-        comparisons.push(comparison);
+    try {
+      // Load and compile all templates
+      const templates = {};
+      for (const name of templateNames) {
+        templates[name] = await this.loadAndCompileTemplate(name);
       }
-    }
+
+      // Perform comparisons
+      const baseTemplateName = 'site_visitor_welcome';
+      const comparisons = [];
+
+      // Ensure base template is loaded
+      if (!templates[baseTemplateName]) {
+        templates[baseTemplateName] = await this.loadAndCompileTemplate(baseTemplateName);
+      }
+
+      for (const name of templateNames) {
+        if (name !== baseTemplateName && templates[baseTemplateName] && templates[name]) {
+          const comparison = await this.compareTemplates(
+            baseTemplateName,
+            templates[baseTemplateName],
+            name,
+            templates[name]
+          );
+          comparisons.push(comparison);
+        }
+      }
 
     // Ask AI to analyze the comparisons
     const prompt = `Analyze the following template comparisons:
@@ -114,39 +262,59 @@ Respond with your analysis in JSON format.`;
       this.log(`Failed to parse JSON response: ${e.message}`);
     }
 
-    return {
-      analysisComplete: true,
-      comparisons: comparisons,
-      overallAssessment: 'warning',
-      recommendations: ['Manual review recommended'],
-      rawResponse: response.content
-    };
+      return {
+        analysisComplete: true,
+        comparisons: comparisons,
+        overallAssessment: 'warning',
+        recommendations: ['Manual review recommended'],
+        rawResponse: response.content
+      };
+    } finally {
+      // Close browser after comparisons
+      await this.closeBrowser();
+    }
   }
 
   async loadAndCompileTemplate(name) {
     // Handle both formats: 'name' and 'name.mjml'
-    const templateName = name.endsWith('.mjml') ? name : `${name}.mjml`;
+    const baseName = name.endsWith('.mjml') ? name.replace('.mjml', '') : name;
+    const templateName = `${baseName}.mjml`;
     const templatePath = path.join(this.templatesDir, templateName);
+
+    // First try to load pre-compiled HTML (with EJS substituted)
+    const compiledHtmlPath = path.join(COMPILED_DIR, `${baseName}.html`);
+    let html = null;
+
+    try {
+      html = await fs.readFile(compiledHtmlPath, 'utf-8');
+      this.log(`Loaded compiled HTML for ${baseName}`);
+    } catch (e) {
+      // Fall back to compiling MJML
+      this.log(`No compiled HTML for ${baseName}, compiling MJML...`);
+    }
 
     try {
       const mjmlContent = await fs.readFile(templatePath, 'utf-8');
 
-      const compiled = mjml2html(mjmlContent, { validationLevel: 'soft' });
+      // If we didn't load compiled HTML, compile MJML
+      if (!html) {
+        const compiled = mjml2html(mjmlContent, { validationLevel: 'soft' });
+        html = compiled.html;
+      }
 
       return {
         success: true,
-        name,
+        name: baseName,
         mjml: mjmlContent,
-        html: compiled.html,
-        errors: compiled.errors,
-        colors: this.extractColors(compiled.html),
-        textContent: this.extractText(compiled.html),
-        structure: this.analyzeStructure(compiled.html)
+        html: html,
+        colors: this.extractColors(html),
+        textContent: this.extractText(html),
+        structure: this.analyzeStructure(html)
       };
     } catch (error) {
       return {
         success: false,
-        name,
+        name: baseName,
         error: error.message
       };
     }
@@ -198,7 +366,8 @@ Respond with your analysis in JSON format.`;
         structuralDifferences: [],
         expectedDifferenceType: 'unknown',
         actualDifferenceType: 'unknown',
-        isAsExpected: false
+        isAsExpected: false,
+        screenshots: null
       };
     }
 
@@ -249,6 +418,23 @@ Respond with your analysis in JSON format.`;
       actualDifferenceType = 'content';
     }
 
+    // Generate visual comparison screenshots
+    let screenshots = null;
+    try {
+      this.log(`Generating visual comparison for ${compareName}...`);
+      screenshots = await this.createVisualComparison(
+        baseName,
+        baseTemplate.html,
+        compareName,
+        compareTemplate.html
+      );
+      if (screenshots) {
+        this.log(`  Screenshots: diff-${compareName}.png, comparison-${compareName}.png (${screenshots.diffPercentage}% diff)`);
+      }
+    } catch (error) {
+      this.log(`  Screenshot generation failed: ${error.message}`);
+    }
+
     return {
       baseTemplate: baseName,
       compareTemplate: compareName,
@@ -265,8 +451,13 @@ Respond with your analysis in JSON format.`;
       expectedDifferenceType,
       actualDifferenceType,
       isAsExpected: expectedDifferenceType === actualDifferenceType ||
-                    (expectedDifferenceType === 'content' && actualDifferenceType === 'both')
+                    (expectedDifferenceType === 'content' && actualDifferenceType === 'both'),
+      screenshots
     };
+  }
+
+  async analyzeTemplatesCleanup() {
+    await this.closeBrowser();
   }
 }
 
