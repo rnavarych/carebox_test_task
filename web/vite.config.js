@@ -790,6 +790,7 @@ function apiPlugin() {
           }
 
           // Parse pipeline step markers from output
+          // Order: planner → analyzer → diff → generator → playwright → reporter
           if (text.includes('[STEP:planner]') || text.includes('Test Planner') || text.includes('Creating test plan')) {
             testState.currentTest.step = 'planner'
             testState.currentTest.stepDescription = 'Analyzing requirements and creating test plans...'
@@ -798,13 +799,13 @@ function apiPlugin() {
             testState.currentTest.step = 'analyzer'
             testState.currentTest.stepDescription = 'Detecting file changes and modified templates...'
             testState.currentTest.progress = 30
-          } else if (text.includes('[STEP:generator]') || text.includes('Test Generator') || text.includes('AI generating')) {
-            testState.currentTest.step = 'generator'
-            testState.currentTest.stepDescription = 'AI generating dynamic test cases...'
-            testState.currentTest.progress = 45
           } else if (text.includes('[STEP:diff]') || text.includes('Diff Analyzer') || text.includes('Comparing templates')) {
             testState.currentTest.step = 'diff'
             testState.currentTest.stepDescription = 'Comparing templates and analyzing differences...'
+            testState.currentTest.progress = 45
+          } else if (text.includes('[STEP:generator]') || text.includes('Test Generator') || text.includes('AI generating')) {
+            testState.currentTest.step = 'generator'
+            testState.currentTest.stepDescription = 'AI generating dynamic test cases...'
             testState.currentTest.progress = 60
           } else if (text.includes('[STEP:playwright]') || text.includes('Playwright Tests') || text.includes('Running AI-generated')) {
             testState.currentTest.step = 'playwright'

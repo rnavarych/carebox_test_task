@@ -197,7 +197,7 @@ const triggerAutoTest = (changedTemplate) => {
     });
     if (testState.logs.length > 200) testState.logs = testState.logs.slice(-200);
 
-    // Update step
+    // Update step (order: planner → analyzer → diff → generator → playwright → reporter)
     if (text.includes('[STEP:planner]')) {
       testState.currentTest.step = 'planner';
       testState.currentTest.stepDescription = 'Analyzing requirements...';
@@ -206,13 +206,13 @@ const triggerAutoTest = (changedTemplate) => {
       testState.currentTest.step = 'analyzer';
       testState.currentTest.stepDescription = 'Detecting changes...';
       testState.currentTest.progress = 30;
-    } else if (text.includes('[STEP:generator]')) {
-      testState.currentTest.step = 'generator';
-      testState.currentTest.stepDescription = 'AI generating test cases...';
-      testState.currentTest.progress = 45;
     } else if (text.includes('[STEP:diff]')) {
       testState.currentTest.step = 'diff';
       testState.currentTest.stepDescription = 'Comparing templates...';
+      testState.currentTest.progress = 45;
+    } else if (text.includes('[STEP:generator]')) {
+      testState.currentTest.step = 'generator';
+      testState.currentTest.stepDescription = 'AI generating test cases...';
       testState.currentTest.progress = 60;
     } else if (text.includes('[STEP:playwright]')) {
       testState.currentTest.step = 'playwright';
@@ -502,7 +502,7 @@ app.post('/api/run-tests', (req, res) => {
     });
     if (testState.logs.length > 200) testState.logs = testState.logs.slice(-200);
 
-    // Update step
+    // Update step (order: planner → analyzer → diff → generator → playwright → reporter)
     if (text.includes('[STEP:planner]')) {
       testState.currentTest.step = 'planner';
       testState.currentTest.stepDescription = 'Analyzing requirements...';
@@ -511,13 +511,13 @@ app.post('/api/run-tests', (req, res) => {
       testState.currentTest.step = 'analyzer';
       testState.currentTest.stepDescription = 'Detecting changes...';
       testState.currentTest.progress = 30;
-    } else if (text.includes('[STEP:generator]')) {
-      testState.currentTest.step = 'generator';
-      testState.currentTest.stepDescription = 'AI generating test cases...';
-      testState.currentTest.progress = 45;
     } else if (text.includes('[STEP:diff]')) {
       testState.currentTest.step = 'diff';
       testState.currentTest.stepDescription = 'Comparing templates...';
+      testState.currentTest.progress = 45;
+    } else if (text.includes('[STEP:generator]')) {
+      testState.currentTest.step = 'generator';
+      testState.currentTest.stepDescription = 'AI generating test cases...';
       testState.currentTest.progress = 60;
     } else if (text.includes('[STEP:playwright]')) {
       testState.currentTest.step = 'playwright';
