@@ -311,14 +311,22 @@ const triggerAutoTest = (changedTemplate) => {
     if (text.includes('[STEP:planner]')) {
       testState.currentTest.step = 'planner';
       testState.currentTest.stepDescription = 'Analyzing requirements...';
-      testState.currentTest.progress = 25;
+      testState.currentTest.progress = 15;
     } else if (text.includes('[STEP:analyzer]')) {
       testState.currentTest.step = 'analyzer';
       testState.currentTest.stepDescription = 'Detecting changes...';
-      testState.currentTest.progress = 50;
+      testState.currentTest.progress = 30;
+    } else if (text.includes('[STEP:generator]')) {
+      testState.currentTest.step = 'generator';
+      testState.currentTest.stepDescription = 'AI generating test cases...';
+      testState.currentTest.progress = 45;
     } else if (text.includes('[STEP:diff]')) {
       testState.currentTest.step = 'diff';
       testState.currentTest.stepDescription = 'Comparing templates...';
+      testState.currentTest.progress = 60;
+    } else if (text.includes('[STEP:playwright]')) {
+      testState.currentTest.step = 'playwright';
+      testState.currentTest.stepDescription = 'Running AI-generated tests...';
       testState.currentTest.progress = 75;
     } else if (text.includes('[STEP:reporter]')) {
       testState.currentTest.step = 'reporter';
@@ -785,14 +793,22 @@ function apiPlugin() {
           if (text.includes('[STEP:planner]') || text.includes('Test Planner') || text.includes('Creating test plan')) {
             testState.currentTest.step = 'planner'
             testState.currentTest.stepDescription = 'Analyzing requirements and creating test plans...'
-            testState.currentTest.progress = 25
+            testState.currentTest.progress = 15
           } else if (text.includes('[STEP:analyzer]') || text.includes('Change Analyzer') || text.includes('Analyzing changes')) {
             testState.currentTest.step = 'analyzer'
             testState.currentTest.stepDescription = 'Detecting file changes and modified templates...'
-            testState.currentTest.progress = 50
+            testState.currentTest.progress = 30
+          } else if (text.includes('[STEP:generator]') || text.includes('Test Generator') || text.includes('AI generating')) {
+            testState.currentTest.step = 'generator'
+            testState.currentTest.stepDescription = 'AI generating dynamic test cases...'
+            testState.currentTest.progress = 45
           } else if (text.includes('[STEP:diff]') || text.includes('Diff Analyzer') || text.includes('Comparing templates')) {
             testState.currentTest.step = 'diff'
             testState.currentTest.stepDescription = 'Comparing templates and analyzing differences...'
+            testState.currentTest.progress = 60
+          } else if (text.includes('[STEP:playwright]') || text.includes('Playwright Tests') || text.includes('Running AI-generated')) {
+            testState.currentTest.step = 'playwright'
+            testState.currentTest.stepDescription = 'Running AI-generated regression tests...'
             testState.currentTest.progress = 75
           } else if (text.includes('[STEP:reporter]') || text.includes('Report Generator') || text.includes('Generating report')) {
             testState.currentTest.step = 'reporter'
