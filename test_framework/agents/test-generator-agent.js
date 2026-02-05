@@ -90,6 +90,13 @@ REGRESSION MODE RULES:
 3. ANY deviation from base is a FAILURE
 4. Visual comparison threshold is 2% - anything above FAILS
 
+CRITICAL - DO NOT INVENT CONTENT:
+- ONLY use content_contains for: "Hello", "Get Started Now"
+- ONLY use content_absent for: "Greetings", "Begin Your Journey"
+- DO NOT check for usernames, emails, or any EJS variable values like "TestUser"
+- EJS variables (<%= userName %>) are substituted at render time - don't check for them
+- If you're unsure about content, use visual_match instead
+
 Generate comprehensive test cases that cover all aspects of the test plan.
 Respond with ONLY the JSON, no markdown formatting or explanation.`;
 
@@ -119,19 +126,25 @@ site_visitor_welcome
 
 ## Requirements (REGRESSION MODE)
 - Base template uses blue color: #2563eb
-- Base template greeting: "Hello"
-- Base template button: "Get Started Now"
+- Base template greeting text: "Hello"
+- Base template button text: "Get Started Now"
 - ALL other templates MUST match base exactly
 - Any color difference (like green #16a34a) is a FAILURE
-- Any content difference (like "Greetings") is a FAILURE
+- Any content difference (like "Greetings" or "Begin Your Journey") is a FAILURE
+
+## IMPORTANT RESTRICTIONS
+- ONLY check for content explicitly listed above: "Hello", "Get Started Now"
+- DO NOT invent or assume any other content like usernames, email addresses, or placeholder text
+- DO NOT check for "TestUser", "userName", "email" or any EJS variable names
+- EJS variables like <%= userName %> are replaced at render time - don't check for variable names
+- Focus on: HTML structure, colors (#2563eb vs #16a34a), and the specific text listed above
 
 Generate test cases for:
-1. Template Compilation (each template compiles to valid HTML)
-2. EJS Variable Rendering (variables are substituted correctly)
-3. Color Regression (all templates use base blue #2563eb, no green #16a34a)
-4. Content Regression (all templates have "Hello" and "Get Started Now", not "Greetings" or "Begin Your Journey")
-5. Structure Validation (valid HTML structure, size limits)
-6. Visual Regression (all templates visually match base within 2%)
+1. Template Compilation (each template compiles to valid HTML with DOCTYPE, html, body tags)
+2. Color Regression (all templates use base blue #2563eb, must NOT have green #16a34a)
+3. Content Regression (all templates have "Hello" greeting, must NOT have "Greetings")
+4. Content Regression (all templates have "Get Started Now" button, must NOT have "Begin Your Journey")
+5. Visual Regression (all templates visually match base within 2% diff threshold)
 
 Generate the complete JSON test cases array now:`;
 
